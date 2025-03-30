@@ -6,7 +6,7 @@ pipeline {
         stage('Checkout GIT') {
             steps {
                 echo 'Pulling ...'
-                git branch: 'ghassen',
+                git branch: 'yassine',
                     url: 'https://github.com/medoussemaboussida/4twin7_TheStarks_Kaddem.git'
             }
         }
@@ -22,6 +22,26 @@ pipeline {
                 sh 'mvn compile'
             }
         }
+        stage('Tests - JUnit/Mockito') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Build package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+        stage('Maven Install') {
+            steps {
+                sh 'mvn install'
+            }
+        }
+        stage('Deploy to Nexus') {
+            steps {
+                sh 'mvn deploy'
+            }
 
 }
+    }
 }
