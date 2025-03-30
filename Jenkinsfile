@@ -6,7 +6,7 @@ pipeline {
         stage('Checkout GIT') {
             steps {
                 echo 'Pulling ...'
-                git branch: 'yassine',
+                git branch: 'ghassen',
                     url: 'https://github.com/medoussemaboussida/4twin7_TheStarks_Kaddem.git'
             }
         }
