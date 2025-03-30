@@ -1,16 +1,12 @@
 pipeline {
     agent any
-    environment {
-
-        DOCKER_CREDENTIALS_ID = credentials('docker-hub-credentials')
-    }
   
     stages {
 
         stage('Checkout GIT') {
             steps {
                 echo 'Pulling ...'
-                git branch: 'ghassen',
+                git branch: 'yassine',
                     url: 'https://github.com/medoussemaboussida/4twin7_TheStarks_Kaddem.git'
             }
         }
@@ -47,6 +43,5 @@ pipeline {
             }
 
 }
-
     }
 }
