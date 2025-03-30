@@ -16,9 +16,9 @@ def success() {
         </html>
         """,
         subject: "Jenkins Build - Success",
-        to: 'ghassenbenmahmoud3@gmail.com',
-        from: 'ghassenbenmahmoud3@gmail.com',
-        replyTo: 'ghassenbenmahmoud3@gmail.com',
+        to: 'medoussemaboussida@gmail.com',
+        from: 'medoussemaboussida@gmail.com',
+        replyTo: 'medoussemaboussida@gmail.com',
         mimeType: 'text/html'
     )
     echo "Success email sent."
@@ -41,9 +41,9 @@ def failure() {
         </html>
         """,
         subject: "Jenkins Build - Failure",
-        to: 'ghassenbenmahmoud3@gmail.com',
-        from: 'ghassenbenmahmoud3@gmail.com',
-        replyTo: 'ghassenbenmahmoud3@gmail.com',
+        to: 'medoussemaboussida@gmail.com',
+        from: 'medoussemaboussida@gmail.com',
+        replyTo: 'medoussemaboussida@gmail.com',
         mimeType: 'text/html'
     )
     echo "Failure email sent."
@@ -59,7 +59,7 @@ pipeline {
         stage('Checkout GIT') {
             steps {
                 echo 'Pulling ...'
-                git branch: 'ghassen',
+                git branch: 'oussema',
                     url: 'https://github.com/medoussemaboussida/4twin7_TheStarks_Kaddem.git'
             }
         }
@@ -112,7 +112,7 @@ pipeline {
         }
          stage('Docker Image') {
             steps {
-                sh 'docker build -t medoussemaboussida/kaddem:1.0.0 .'
+                sh 'docker build -t mohamedoussemaboussida/kaddem:1.0.0 .'
             }
         }
         stage('Docker Login') {
@@ -122,7 +122,7 @@ pipeline {
         }
         stage('Push Docker Image') {
             steps {
-                sh 'docker push  medoussemaboussida/kaddem:1.0.0'
+                sh 'docker push  mohamedoussemaboussida/kaddem:1.0.0'
             }
         }
         stage("Docker Compose") {
