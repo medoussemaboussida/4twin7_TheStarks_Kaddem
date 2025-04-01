@@ -41,6 +41,13 @@ pipeline {
                 sh 'mvn install'
             }
         }
+          stage("SonarQube Analysis") {
+                    steps {
+                        withSonarQubeEnv('scanner') {
+                            sh 'mvn sonar:sonar'
+                        }
+                    }
+                }
        stage('Deploy to Nexus') {
             steps {
                 sh 'mvn deploy'
