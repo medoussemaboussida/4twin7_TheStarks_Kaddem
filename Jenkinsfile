@@ -1,7 +1,10 @@
 pipeline {
     agent any
   
+ environment {
 
+        DOCKER_CREDENTIALS_ID = credentials('docker-hub-credentials')
+    }
     stages {
 
         stage('Checkout GIT') {
@@ -42,9 +45,27 @@ pipeline {
             steps {
                 sh 'mvn deploy'
             }
-
-
-}
+        }
+ stage('Docker Image') {
+            steps {
+                sh 'docker build -t ghassenbenmahmoud/kaddem:1.0.0 .'
+            }
+        }
+        stage('Docker Login') {
+            steps {
+                sh 'echo $DOCKER_CREDENTIALS_ID_PSW | docker login -u $DOCKER_CREDENTIALS_ID_USR --password-stdin'
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                sh 'docker push  ghassenbenmahmoud/kaddem:1.0.0'
+            }
+        }
+        stage("Docker Compose") {
+            steps {
+                sh 'docker compose up -d'
+            }
+        }
 
     }
 }
