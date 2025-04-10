@@ -1,60 +1,51 @@
 def success() {
-    def imageUrl = 'https://miro.medium.com/v2/resize:fit:600/1*qzDG-ROC1aUkVZ-LYVe5pA.jpeg'
+    def imageUrl = 'https://semaphoreci.com/wp-content/uploads/2020/02/cic-cd-explained.jpg'
     def imageWidth = '800px'
     def imageHeight = 'auto'
 
-    echo "Sending success notification..."
+    echo "Sending success email..."
     emailext(
         body: """
         <html>
-        <body style="font-family: Arial, sans-serif;">
-            <h2 style="color: green;"> Build Completed Successfully!</h2>
-            <p>Great news! The Jenkins pipeline executed without any issues.</p>
-            <p>You can check the build details here: 
-                <a href="${BUILD_URL}" style="color: #1a73e8;">View Build</a>
-            </p>
-            <p><img src="${imageUrl}" alt="CI/CD Flow Diagram" width="${imageWidth}" height="${imageHeight}" style="border:1px solid #ccc;"></p>
-            <p style="font-size: 12px; color: gray;">— Jenkins CI System</p>
+        <body>
+            <p>The Jenkins job was successful.</p>
+            <p>You can view the build at: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+            <p><img src="${imageUrl}" alt="Your Image" width="${imageWidth}" height="${imageHeight}"></p>
         </body>
         </html>
         """,
-        subject: " Jenkins Pipeline Success - Build Info",
+        subject: "Jenkins Build - Success",
         to: 'asmariahii2000@gmail.com',
         from: 'asmariahii2000@gmail.com',
         replyTo: 'asmariahii2000@gmail.com',
         mimeType: 'text/html'
     )
-    echo "Success email dispatched."
+    echo "Success email sent."
 }
 
-
 def failure() {
-    def imageUrl = 'https://slack.engineering/wp-content/uploads/sites/7/2021/05/jenkins-fire.png'
+    def imageUrl = 'https://miro.medium.com/v2/resize:fit:4800/format:webp/1*ytlj68SIRGvi9mecSDb52g.png'
     def imageWidth = '800px'
     def imageHeight = 'auto'
 
-    echo "Sending failure alert..."
+    echo "Sending failure email..."
     emailext(
         body: """
         <html>
-        <body style="font-family: Arial, sans-serif;">
-            <h2 style="color: red;">❌ Build Failed</h2>
-            <p>Unfortunately, something went wrong during the Jenkins build process.</p>
-            <p>Take a look at the build logs and investigate here: 
-                <a href="${BUILD_URL}" style="color: #d93025;">Open Build Logs</a>
-            </p>
-            <p><img src="${imageUrl}" alt="Failure Warning" width="${imageWidth}" height="${imageHeight}" style="border:1px solid #ccc;"></p>
-            <p style="font-size: 12px; color: gray;">— Jenkins CI System</p>
+        <body>
+            <p>Oops! The Jenkins job Failed.</p>
+            <p>You can view the build at: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+            <p><img src="${imageUrl}" alt="Your Image" width="${imageWidth}" height="${imageHeight}"></p>
         </body>
         </html>
         """,
-        subject: " Jenkins Pipeline Success - Build Info",
+        subject: "Jenkins Build - Failure",
         to: 'asmariahii2000@gmail.com',
         from: 'asmariahii2000@gmail.com',
         replyTo: 'asmariahii2000@gmail.com',
         mimeType: 'text/html'
     )
-    echo "Failure email dispatched."
+    echo "Failure email sent."
 }
 
 pipeline {
