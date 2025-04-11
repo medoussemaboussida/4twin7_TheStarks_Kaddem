@@ -107,7 +107,6 @@ class DepartementServiceImplTest {
         verify(departementRepository, times(1)).findById(1);
         verify(departementRepository, times(1)).delete(departement);
     }
-
     @Test
     void testRetrieveDepartementNotFound() {
         // Simuler un département non trouvé
