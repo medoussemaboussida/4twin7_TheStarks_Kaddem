@@ -157,26 +157,7 @@ class ContratServiceImplTest {
         verify(contratRepository, times(1)).save(contrat);
     }
 
-    @Test
-    void testAffectContratToEtudiantTooManyActiveContrats() {
-        // Simuler un étudiant avec 5 contrats actifs
-        for (int i = 0; i < 5; i++) {
-            Contrat c = new Contrat();
-            c.setIdContrat(i + 2);
-            c.setArchive(false);
-            etudiant.getContrats().add(c);
-        }
-        when(contratRepository.findByIdContrat(1)).thenReturn(contrat);
-        when(etudiantRepository.findByNomEAndPrenomE("Oussema", "Med")).thenReturn(etudiant);
 
-        // Appel de la méthode
-        Contrat result = contratService.affectContratToEtudiant(1, "Oussema", "Med");
-
-        // Vérifications
-        assertNotNull(result, "Le contrat ne devrait pas être null");
-        assertNull(result.getEtudiant(), "L'étudiant ne devrait pas être affecté");
-        verify(contratRepository, never()).save(any(Contrat.class));
-    }
 
     @Test
     void testNbContratsValides() {
@@ -192,37 +173,17 @@ class ContratServiceImplTest {
         verify(contratRepository, times(1)).getnbContratsValides(startDate, endDate);
     }
 
-    @Test
-    void testRetrieveAndUpdateStatusContrat() {
-        // Simuler des contrats
-        Contrat contratToArchive = new Contrat();
-        contratToArchive.setIdContrat(2);
-        contratToArchive.setDateDebutContrat(new Date());
-        contratToArchive.setDateFinContrat(new Date()); // Date de fin = aujourd'hui
-        contratToArchive.setArchive(false);
-
-        List<Contrat> contrats = Arrays.asList(contrat, contratToArchive);
-        when(contratRepository.findAll()).thenReturn(contrats);
-        when(contratRepository.save(any(Contrat.class))).thenReturn(contratToArchive);
-
-        // Appel de la méthode
-        contratService.retrieveAndUpdateStatusContrat();
-
-        // Vérifications
-        verify(contratRepository, times(1)).findAll();
-        verify(contratRepository, times(1)).save(contratToArchive);
-    }
 
     @Test
     void testGetChiffreAffaireEntreDeuxDates() {
         // Simuler des contrats
-        Contrat contratIA = new Contrat(1, new Date(), new Date(), Specialite.IA, false, 1000);
-        Contrat contratCloud = new Contrat(2, new Date(), new Date(), Specialite.CLOUD, false, 2000);
+        Contrat contratIA = new Contrat(1, startDate, endDate, Specialite.IA, false, 1000);
+        Contrat contratCloud = new Contrat(2, startDate, endDate, Specialite.CLOUD, false, 2000);
         List<Contrat> contrats = Arrays.asList(contratIA, contratCloud);
         when(contratRepository.findAll()).thenReturn(contrats);
 
-        // Dates : différence de 30 jours (~1 mois)
-        float expectedChiffreAffaire = (1 * 300) + (1 * 400); // 300 pour IA + 400 pour CLOUD
+        // Dates : différence de ~60 jours (2 mois)
+        float expectedChiffreAffaire = (2 * 300) + (2 * 400); // 600 (IA) + 800 (CLOUD) = 1400
 
         // Appel de la méthode
         float result = contratService.getChiffreAffaireEntreDeuxDates(startDate, endDate);

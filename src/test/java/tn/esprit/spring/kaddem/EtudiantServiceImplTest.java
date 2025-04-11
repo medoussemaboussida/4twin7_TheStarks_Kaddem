@@ -176,10 +176,10 @@ class EtudiantServiceImplTest {
 
     @Test
     void testAddAndAssignEtudiantToEquipeAndContract() {
-        // Simuler le comportement des repositories
+        // Simuler uniquement ce qui est strictement nécessaire
+        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
         when(contratRepository.findById(1)).thenReturn(Optional.of(contrat));
         when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
-        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
 
         // Appel de la méthode
         Etudiant result = etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant, 1, 1);
@@ -190,7 +190,7 @@ class EtudiantServiceImplTest {
         assertTrue(equipe.getEtudiants().contains(etudiant), "L'étudiant devrait être dans l'équipe");
         verify(contratRepository, times(1)).findById(1);
         verify(equipeRepository, times(1)).findById(1);
-        verify(etudiantRepository, never()).save(any(Etudiant.class)); // Pas de save explicite dans la méthode actuelle
+        verify(etudiantRepository, times(1)).save(any(Etudiant.class)); // Ajouté car la méthode devrait sauvegarder
     }
 
     @Test
