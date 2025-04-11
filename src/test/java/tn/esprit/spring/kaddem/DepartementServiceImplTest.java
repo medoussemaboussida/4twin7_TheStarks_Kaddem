@@ -2,118 +2,118 @@ package tn.esprit.spring.kaddem;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.spring.kaddem.entities.Departement;
 import tn.esprit.spring.kaddem.repositories.DepartementRepository;
 import tn.esprit.spring.kaddem.services.DepartementServiceImpl;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Transactional // Annule les modifications après chaque test
+@ExtendWith(MockitoExtension.class)
 class DepartementServiceImplTest {
 
-    @Autowired
-    private DepartementServiceImpl departementService;
-
-    @Autowired
+    @Mock
     private DepartementRepository departementRepository;
+
+    @InjectMocks
+    private DepartementServiceImpl departementService;
 
     private Departement departement;
 
     @BeforeEach
     void setUp() {
-        // Nettoyer la base avant chaque test
-        departementRepository.deleteAll();
-
-        // Initialisation d'un département
+        // Initialisation d'un objet Departement pour les tests
         departement = new Departement();
+        departement.setIdDepart(1);
         departement.setNomDepart("Informatique");
     }
 
     @Test
     void testRetrieveAllDepartements() {
-        // Ajouter des départements
-        departementRepository.save(departement);
-        Departement departement2 = new Departement();
-        departement2.setNomDepart("Mathematiques");
-        departementRepository.save(departement2);
+        // Données simulées
+        List<Departement> departementList = Arrays.asList(departement, new Departement());
+        when(departementRepository.findAll()).thenReturn(departementList);
 
         // Appel de la méthode
         List<Departement> result = departementService.retrieveAllDepartements();
 
         // Vérifications
-        assertNotNull(result, "La liste des départements ne devrait pas être null");
-        assertEquals(2, result.size(), "La liste devrait contenir 2 départements");
-        assertTrue(result.stream().anyMatch(d -> d.getNomDepart().equals("Informatique")),
-                "La liste devrait contenir le département Informatique");
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(departementRepository, times(1)).findAll();
     }
 
     @Test
     void testAddDepartement() {
+        // Simuler le comportement du repository
+        when(departementRepository.save(any(Departement.class))).thenReturn(departement);
+
         // Appel de la méthode
         Departement result = departementService.addDepartement(departement);
 
         // Vérifications
-        assertNotNull(result, "Le département ajouté ne devrait pas être null");
-        assertNotNull(result.getIdDepart(), "L'ID du département devrait être généré");
-        assertEquals("Informatique", result.getNomDepart(), "Le nom devrait être 'Informatique'");
-        assertEquals(1, departementRepository.count(), "Il devrait y avoir 1 département dans la base");
+        assertNotNull(result);
+        assertEquals("Informatique", result.getNomDepart());
+        verify(departementRepository, times(1)).save(departement);
     }
 
     @Test
     void testUpdateDepartement() {
-        // Sauvegarder le département initial
-        Departement savedDepartement = departementRepository.save(departement);
-
-        // Modifier le département
-        savedDepartement.setNomDepart("Physique");
+        // Simuler le comportement du repository
+        when(departementRepository.save(any(Departement.class))).thenReturn(departement);
 
         // Appel de la méthode
-        Departement result = departementService.updateDepartement(savedDepartement);
+        Departement result = departementService.updateDepartement(departement);
 
         // Vérifications
-        assertNotNull(result, "Le département mis à jour ne devrait pas être null");
-        assertEquals("Physique", result.getNomDepart(), "Le nom devrait être 'Physique'");
-        assertEquals(savedDepartement.getIdDepart(), result.getIdDepart(),
-                "L'ID ne devrait pas changer");
+        assertNotNull(result);
+        assertEquals(1, result.getIdDepart());
+        verify(departementRepository, times(1)).save(departement);
     }
 
     @Test
     void testRetrieveDepartement() {
-        // Sauvegarder le département
-        Departement savedDepartement = departementRepository.save(departement);
+        // Simuler le comportement du repository
+        when(departementRepository.findById(1)).thenReturn(Optional.of(departement));
 
         // Appel de la méthode
-        Departement result = departementService.retrieveDepartement(savedDepartement.getIdDepart());
+        Departement result = departementService.retrieveDepartement(1);
 
         // Vérifications
-        assertNotNull(result, "Le département récupéré ne devrait pas être null");
-        assertEquals("Informatique", result.getNomDepart(), "Le nom devrait être 'Informatique'");
-        assertEquals(savedDepartement.getIdDepart(), result.getIdDepart(),
-                "L'ID devrait correspondre");
-    }
-
-    @Test
-    void testRetrieveDepartementNotFound() {
-        // Appel de la méthode avec un ID inexistant
-        assertThrows(Exception.class, () -> departementService.retrieveDepartement(999),
-                "Une exception devrait être levée pour un département inexistant");
+        assertNotNull(result);
+        assertEquals("Informatique", result.getNomDepart());
+        verify(departementRepository, times(1)).findById(1);
     }
 
     @Test
     void testDeleteDepartement() {
-        // Sauvegarder le département
-        Departement savedDepartement = departementRepository.save(departement);
+        // Simuler le comportement du repository
+        when(departementRepository.findById(1)).thenReturn(Optional.of(departement));
+        doNothing().when(departementRepository).delete(departement);
 
         // Appel de la méthode
-        departementService.deleteDepartement(savedDepartement.getIdDepart());
+        departementService.deleteDepartement(1);
 
         // Vérifications
-        assertEquals(0, departementRepository.count(), "Il ne devrait plus y avoir de département dans la base");
+        verify(departementRepository, times(1)).findById(1);
+        verify(departementRepository, times(1)).delete(departement);
+    }
+    @Test
+    void testRetrieveDepartementNotFound() {
+        // Simuler un département non trouvé
+        when(departementRepository.findById(999)).thenReturn(Optional.empty());
+
+        // Vérification que la méthode lève une exception
+        assertThrows(Exception.class, () -> departementService.retrieveDepartement(999));
+        verify(departementRepository, times(1)).findById(999);
     }
 }

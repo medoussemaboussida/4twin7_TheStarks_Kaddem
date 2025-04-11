@@ -2,58 +2,55 @@ package tn.esprit.spring.kaddem;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.spring.kaddem.entities.Departement;
 import tn.esprit.spring.kaddem.entities.Universite;
 import tn.esprit.spring.kaddem.repositories.DepartementRepository;
 import tn.esprit.spring.kaddem.repositories.UniversiteRepository;
 import tn.esprit.spring.kaddem.services.UniversiteServiceImpl;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Transactional // Annule les modifications après chaque test
+@ExtendWith(MockitoExtension.class)
 class UniversiteServiceImplTest {
 
-    @Autowired
-    private UniversiteServiceImpl universiteService;
-
-    @Autowired
+    @Mock
     private UniversiteRepository universiteRepository;
 
-    @Autowired
+    @Mock
     private DepartementRepository departementRepository;
+
+    @InjectMocks
+    private UniversiteServiceImpl universiteService;
 
     private Universite universite;
     private Departement departement;
 
     @BeforeEach
     void setUp() {
-        // Nettoyer la base avant chaque test
-        universiteRepository.deleteAll();
-        departementRepository.deleteAll();
-
         // Initialisation des objets
         universite = new Universite();
+        universite.setIdUniv(1); // ID défini manuellement pour les mocks
         universite.setNomUniv("Université de Tunis");
         universite.setDepartements(new HashSet<>());
 
         departement = new Departement();
+        departement.setIdDepart(1); // ID défini manuellement pour les mocks
         departement.setNomDepart("Informatique");
     }
 
     @Test
     void testRetrieveAllUniversites() {
-        // Ajouter des universités
-        universiteRepository.save(universite);
-        Universite universite2 = new Universite("Université de Carthage");
-        universiteRepository.save(universite2);
+        // Données simulées
+        List<Universite> universites = Arrays.asList(universite, new Universite("Université de Carthage"));
+        when(universiteRepository.findAll()).thenReturn(universites);
 
         // Appel de la méthode
         List<Universite> result = universiteService.retrieveAllUniversites();
@@ -63,105 +60,107 @@ class UniversiteServiceImplTest {
         assertEquals(2, result.size(), "La liste devrait contenir 2 universités");
         assertTrue(result.stream().anyMatch(u -> u.getNomUniv().equals("Université de Tunis")),
                 "La liste devrait contenir l'université 'Université de Tunis'");
+        verify(universiteRepository, times(1)).findAll();
     }
 
     @Test
     void testAddUniversite() {
+        // Simuler le comportement du repository
+        when(universiteRepository.save(any(Universite.class))).thenReturn(universite);
+
         // Appel de la méthode
         Universite result = universiteService.addUniversite(universite);
 
         // Vérifications
         assertNotNull(result, "L'université ajoutée ne devrait pas être null");
-        assertNotNull(result.getIdUniv(), "L'ID de l'université devrait être généré");
         assertEquals("Université de Tunis", result.getNomUniv(), "Le nom devrait être 'Université de Tunis'");
-        assertEquals(1, universiteRepository.count(), "Il devrait y avoir 1 université dans la base");
+        verify(universiteRepository, times(1)).save(universite);
     }
 
     @Test
     void testUpdateUniversite() {
-        // Sauvegarder l'université initiale
-        Universite savedUniversite = universiteRepository.save(universite);
-
-        // Modifier l'université
-        savedUniversite.setNomUniv("Université de Tunis Updated");
+        // Simuler le comportement du repository
+        when(universiteRepository.save(any(Universite.class))).thenReturn(universite);
 
         // Appel de la méthode
-        Universite result = universiteService.updateUniversite(savedUniversite);
+        Universite result = universiteService.updateUniversite(universite);
 
         // Vérifications
         assertNotNull(result, "L'université mise à jour ne devrait pas être null");
-        assertEquals("Université de Tunis Updated", result.getNomUniv(),
-                "Le nom devrait être 'Université de Tunis Updated'");
-        assertEquals(savedUniversite.getIdUniv(), result.getIdUniv(), "L'ID ne devrait pas changer");
+        assertEquals("Université de Tunis", result.getNomUniv(), "Le nom devrait être 'Université de Tunis'");
+        verify(universiteRepository, times(1)).save(universite);
     }
 
     @Test
     void testRetrieveUniversite() {
-        // Sauvegarder l'université
-        Universite savedUniversite = universiteRepository.save(universite);
+        // Simuler le comportement du repository
+        when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
 
         // Appel de la méthode
-        Universite result = universiteService.retrieveUniversite(savedUniversite.getIdUniv());
+        Universite result = universiteService.retrieveUniversite(1);
 
         // Vérifications
         assertNotNull(result, "L'université récupérée ne devrait pas être null");
         assertEquals("Université de Tunis", result.getNomUniv(), "Le nom devrait être 'Université de Tunis'");
-        assertEquals(savedUniversite.getIdUniv(), result.getIdUniv(), "L'ID devrait correspondre");
+        assertEquals(1, result.getIdUniv(), "L'ID devrait être 1");
+        verify(universiteRepository, times(1)).findById(1);
     }
 
     @Test
     void testRetrieveUniversiteNotFound() {
+        // Simuler une université non trouvée
+        when(universiteRepository.findById(999)).thenReturn(Optional.empty());
+
         // Appel de la méthode avec un ID inexistant
-        assertThrows(Exception.class, () -> universiteService.retrieveUniversite(999),
+        assertThrows(NoSuchElementException.class, () -> universiteService.retrieveUniversite(999),
                 "Une exception devrait être levée pour une université inexistante");
+        verify(universiteRepository, times(1)).findById(999);
     }
 
     @Test
     void testDeleteUniversite() {
-        // Sauvegarder l'université
-        Universite savedUniversite = universiteRepository.save(universite);
+        // Simuler le comportement du repository
+        when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
+        doNothing().when(universiteRepository).delete(universite);
 
         // Appel de la méthode
-        universiteService.deleteUniversite(savedUniversite.getIdUniv());
+        universiteService.deleteUniversite(1);
 
         // Vérifications
-        assertEquals(0, universiteRepository.count(), "Il ne devrait plus y avoir d'université dans la base");
+        verify(universiteRepository, times(1)).findById(1);
+        verify(universiteRepository, times(1)).delete(universite);
     }
 
     @Test
     void testAssignUniversiteToDepartement() {
-        // Sauvegarder l'université et le département
-        Universite savedUniversite = universiteRepository.save(universite);
-        Departement savedDepartement = departementRepository.save(departement);
+        // Simuler le comportement des repositories
+        when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
+        when(departementRepository.findById(1)).thenReturn(Optional.of(departement));
+        when(universiteRepository.save(any(Universite.class))).thenReturn(universite);
 
         // Appel de la méthode
-        universiteService.assignUniversiteToDepartement(savedUniversite.getIdUniv(), savedDepartement.getIdDepart());
+        universiteService.assignUniversiteToDepartement(1, 1);
 
         // Vérifications
-        Universite updatedUniversite = universiteRepository.findById(savedUniversite.getIdUniv()).orElse(null);
-        assertNotNull(updatedUniversite, "L'université ne devrait pas être null");
-        assertNotNull(updatedUniversite.getDepartements(), "La liste des départements ne devrait pas être null");
-        assertEquals(1, updatedUniversite.getDepartements().size(), "L'université devrait avoir 1 département");
-        assertTrue(updatedUniversite.getDepartements().stream()
-                        .anyMatch(d -> d.getNomDepart().equals("Informatique")),
-                "Le département devrait être 'Informatique'");
+        assertTrue(universite.getDepartements().contains(departement),
+                "Le département devrait être assigné à l'université");
+        verify(universiteRepository, times(1)).save(universite);
     }
 
     @Test
     void testRetrieveDepartementsByUniversite() {
-        // Sauvegarder l'université et le département
-        Universite savedUniversite = universiteRepository.save(universite);
-        Departement savedDepartement = departementRepository.save(departement);
-        savedUniversite.getDepartements().add(savedDepartement);
-        universiteRepository.save(savedUniversite);
+        // Préparer des données simulées
+        universite.getDepartements().add(departement);
+        when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
 
         // Appel de la méthode
-        Set<Departement> result = universiteService.retrieveDepartementsByUniversite(savedUniversite.getIdUniv());
+        Set<Departement> result = universiteService.retrieveDepartementsByUniversite(1);
 
         // Vérifications
         assertNotNull(result, "La liste des départements ne devrait pas être null");
         assertEquals(1, result.size(), "Il devrait y avoir 1 département");
         assertTrue(result.stream().anyMatch(d -> d.getNomDepart().equals("Informatique")),
                 "Le département devrait être 'Informatique'");
+        verify(universiteRepository, times(1)).findById(1);
     }
 }

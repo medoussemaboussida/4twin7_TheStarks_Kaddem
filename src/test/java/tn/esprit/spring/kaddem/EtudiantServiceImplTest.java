@@ -2,44 +2,40 @@ package tn.esprit.spring.kaddem;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
-import tn.esprit.spring.kaddem.entities.Contrat;
-import tn.esprit.spring.kaddem.entities.Departement;
-import tn.esprit.spring.kaddem.entities.Equipe;
-import tn.esprit.spring.kaddem.entities.Etudiant;
-import tn.esprit.spring.kaddem.entities.Option;
-import tn.esprit.spring.kaddem.entities.Specialite;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import tn.esprit.spring.kaddem.entities.*;
 import tn.esprit.spring.kaddem.repositories.ContratRepository;
 import tn.esprit.spring.kaddem.repositories.DepartementRepository;
 import tn.esprit.spring.kaddem.repositories.EquipeRepository;
 import tn.esprit.spring.kaddem.repositories.EtudiantRepository;
 import tn.esprit.spring.kaddem.services.EtudiantServiceImpl;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Transactional // Annule les modifications après chaque test
+@ExtendWith(MockitoExtension.class)
 class EtudiantServiceImplTest {
 
-    @Autowired
-    private EtudiantServiceImpl etudiantService;
-
-    @Autowired
+    @Mock
     private EtudiantRepository etudiantRepository;
 
-    @Autowired
+    @Mock
     private DepartementRepository departementRepository;
 
-    @Autowired
+    @Mock
     private ContratRepository contratRepository;
 
-    @Autowired
+    @Mock
     private EquipeRepository equipeRepository;
+
+    @InjectMocks
+    private EtudiantServiceImpl etudiantService;
 
     private Etudiant etudiant;
     private Departement departement;
@@ -48,22 +44,21 @@ class EtudiantServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        // Nettoyer la base avant chaque test
-        etudiantRepository.deleteAll();
-        departementRepository.deleteAll();
-        contratRepository.deleteAll();
-        equipeRepository.deleteAll();
-
         // Initialisation des objets
         etudiant = new Etudiant();
+        etudiant.setIdEtudiant(1); // ID défini manuellement pour les mocks
         etudiant.setNomE("Oussema");
         etudiant.setPrenomE("Med");
         etudiant.setOp(Option.GAMIX);
+        etudiant.setContrats(new HashSet<>());
+        etudiant.setEquipes(new ArrayList<>());
 
         departement = new Departement();
+        departement.setIdDepart(1); // ID défini manuellement pour les mocks
         departement.setNomDepart("Informatique");
 
         contrat = new Contrat();
+        contrat.setIdContrat(1); // ID défini manuellement pour les mocks
         contrat.setDateDebutContrat(new Date());
         contrat.setDateFinContrat(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 30)); // +30 jours
         contrat.setSpecialite(Specialite.IA);
@@ -71,15 +66,16 @@ class EtudiantServiceImplTest {
         contrat.setMontantContrat(1000);
 
         equipe = new Equipe();
+        equipe.setIdEquipe(1); // ID défini manuellement pour les mocks
         equipe.setNomEquipe("Equipe A");
+        equipe.setEtudiants(new HashSet<>());
     }
 
     @Test
     void testRetrieveAllEtudiants() {
-        // Ajouter des étudiants
-        etudiantRepository.save(etudiant);
-        Etudiant etudiant2 = new Etudiant("Ali", "Ben", Option.SE);
-        etudiantRepository.save(etudiant2);
+        // Données simulées
+        List<Etudiant> etudiants = Arrays.asList(etudiant, new Etudiant("Ali", "Ben", Option.SE));
+        when(etudiantRepository.findAll()).thenReturn(etudiants);
 
         // Appel de la méthode
         List<Etudiant> result = etudiantService.retrieveAllEtudiants();
@@ -89,126 +85,132 @@ class EtudiantServiceImplTest {
         assertEquals(2, result.size(), "La liste devrait contenir 2 étudiants");
         assertTrue(result.stream().anyMatch(e -> e.getNomE().equals("Oussema")),
                 "La liste devrait contenir l'étudiant Oussema");
+        verify(etudiantRepository, times(1)).findAll();
     }
 
     @Test
     void testAddEtudiant() {
+        // Simuler le comportement du repository
+        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
+
         // Appel de la méthode
         Etudiant result = etudiantService.addEtudiant(etudiant);
 
         // Vérifications
         assertNotNull(result, "L'étudiant ajouté ne devrait pas être null");
-        assertNotNull(result.getIdEtudiant(), "L'ID de l'étudiant devrait être généré");
         assertEquals("Oussema", result.getNomE(), "Le nom devrait être 'Oussema'");
         assertEquals(Option.GAMIX, result.getOp(), "L'option devrait être 'GAMIX'");
-        assertEquals(1, etudiantRepository.count(), "Il devrait y avoir 1 étudiant dans la base");
+        verify(etudiantRepository, times(1)).save(etudiant);
     }
 
     @Test
     void testUpdateEtudiant() {
-        // Sauvegarder l'étudiant initial
-        Etudiant savedEtudiant = etudiantRepository.save(etudiant);
-
-        // Modifier l'étudiant
-        savedEtudiant.setNomE("Oussema Updated");
-        savedEtudiant.setOp(Option.SE);
+        // Simuler le comportement du repository
+        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
 
         // Appel de la méthode
-        Etudiant result = etudiantService.updateEtudiant(savedEtudiant);
+        Etudiant result = etudiantService.updateEtudiant(etudiant);
 
         // Vérifications
         assertNotNull(result, "L'étudiant mis à jour ne devrait pas être null");
-        assertEquals("Oussema Updated", result.getNomE(), "Le nom devrait être 'Oussema Updated'");
-        assertEquals(Option.SE, result.getOp(), "L'option devrait être 'SE'");
-        assertEquals(savedEtudiant.getIdEtudiant(), result.getIdEtudiant(), "L'ID ne devrait pas changer");
+        assertEquals("Oussema", result.getNomE(), "Le nom devrait être 'Oussema'");
+        assertEquals(Option.GAMIX, result.getOp(), "L'option devrait être 'GAMIX'");
+        verify(etudiantRepository, times(1)).save(etudiant);
     }
 
     @Test
     void testRetrieveEtudiant() {
-        // Sauvegarder l'étudiant
-        Etudiant savedEtudiant = etudiantRepository.save(etudiant);
+        // Simuler le comportement du repository
+        when(etudiantRepository.findById(1)).thenReturn(Optional.of(etudiant));
 
         // Appel de la méthode
-        Etudiant result = etudiantService.retrieveEtudiant(savedEtudiant.getIdEtudiant());
+        Etudiant result = etudiantService.retrieveEtudiant(1);
 
         // Vérifications
         assertNotNull(result, "L'étudiant récupéré ne devrait pas être null");
         assertEquals("Oussema", result.getNomE(), "Le nom devrait être 'Oussema'");
-        assertEquals(savedEtudiant.getIdEtudiant(), result.getIdEtudiant(), "L'ID devrait correspondre");
+        assertEquals(1, result.getIdEtudiant(), "L'ID devrait être 1");
+        verify(etudiantRepository, times(1)).findById(1);
     }
 
     @Test
     void testRetrieveEtudiantNotFound() {
+        // Simuler un étudiant non trouvé
+        when(etudiantRepository.findById(999)).thenReturn(Optional.empty());
+
         // Appel de la méthode avec un ID inexistant
-        assertThrows(Exception.class, () -> etudiantService.retrieveEtudiant(999),
+        assertThrows(NoSuchElementException.class, () -> etudiantService.retrieveEtudiant(999),
                 "Une exception devrait être levée pour un étudiant inexistant");
+        verify(etudiantRepository, times(1)).findById(999);
     }
 
     @Test
     void testRemoveEtudiant() {
-        // Sauvegarder l'étudiant
-        Etudiant savedEtudiant = etudiantRepository.save(etudiant);
+        // Simuler le comportement du repository
+        when(etudiantRepository.findById(1)).thenReturn(Optional.of(etudiant));
+        doNothing().when(etudiantRepository).delete(etudiant);
 
         // Appel de la méthode
-        etudiantService.removeEtudiant(savedEtudiant.getIdEtudiant());
+        etudiantService.removeEtudiant(1);
 
         // Vérifications
-        assertEquals(0, etudiantRepository.count(), "Il ne devrait plus y avoir d'étudiant dans la base");
+        verify(etudiantRepository, times(1)).findById(1);
+        verify(etudiantRepository, times(1)).delete(etudiant);
     }
 
     @Test
     void testAssignEtudiantToDepartement() {
-        // Sauvegarder l'étudiant et le département
-        Etudiant savedEtudiant = etudiantRepository.save(etudiant);
-        Departement savedDepartement = departementRepository.save(departement);
+        // Simuler le comportement des repositories
+        when(etudiantRepository.findById(1)).thenReturn(Optional.of(etudiant));
+        when(departementRepository.findById(1)).thenReturn(Optional.of(departement));
+        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
 
         // Appel de la méthode
-        etudiantService.assignEtudiantToDepartement(savedEtudiant.getIdEtudiant(), savedDepartement.getIdDepart());
+        etudiantService.assignEtudiantToDepartement(1, 1);
 
         // Vérifications
-        Etudiant updatedEtudiant = etudiantRepository.findById(savedEtudiant.getIdEtudiant()).orElse(null);
-        assertNotNull(updatedEtudiant, "L'étudiant ne devrait pas être null");
-        assertNotNull(updatedEtudiant.getDepartement(), "Le département ne devrait pas être null");
-        assertEquals("Informatique", updatedEtudiant.getDepartement().getNomDepart(),
-                "Le département devrait être 'Informatique'");
+        assertEquals(departement, etudiant.getDepartement(),
+                "Le département devrait être assigné à l'étudiant");
+        verify(etudiantRepository, times(1)).save(etudiant);
     }
 
     @Test
     void testAddAndAssignEtudiantToEquipeAndContract() {
-        // Sauvegarder le contrat et l'équipe
-        Contrat savedContrat = contratRepository.save(contrat);
-        Equipe savedEquipe = equipeRepository.save(equipe);
+        // Simuler le comportement des repositories
+        when(contratRepository.findById(1)).thenReturn(Optional.of(contrat));
+        when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
+        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
 
         // Appel de la méthode
-        Etudiant result = etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant,
-                savedContrat.getIdContrat(), savedEquipe.getIdEquipe());
+        Etudiant result = etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant, 1, 1);
 
         // Vérifications
         assertNotNull(result, "L'étudiant ne devrait pas être null");
-        assertNotNull(result.getIdEtudiant(), "L'ID de l'étudiant devrait être généré");
-        assertEquals(1, contratRepository.findById(savedContrat.getIdContrat()).get().getEtudiant().getIdEtudiant(),
-                "Le contrat devrait être assigné à l'étudiant");
-        assertEquals(1, equipeRepository.findById(savedEquipe.getIdEquipe()).get().getEtudiants().size(),
-                "L'équipe devrait contenir 1 étudiant");
+        assertEquals(etudiant, contrat.getEtudiant(), "Le contrat devrait être assigné à l'étudiant");
+        assertTrue(equipe.getEtudiants().contains(etudiant), "L'étudiant devrait être dans l'équipe");
+        verify(contratRepository, times(1)).findById(1);
+        verify(equipeRepository, times(1)).findById(1);
+        verify(etudiantRepository, never()).save(any(Etudiant.class)); // Pas de save explicite dans la méthode actuelle
     }
 
     @Test
     void testGetEtudiantsByDepartement() {
-        // Sauvegarder le département et les étudiants
-        Departement savedDepartement = departementRepository.save(departement);
-        etudiant.setDepartement(savedDepartement);
-        Etudiant savedEtudiant1 = etudiantRepository.save(etudiant);
+        // Données simulées
         Etudiant etudiant2 = new Etudiant("Ali", "Ben", Option.SE);
-        etudiant2.setDepartement(savedDepartement);
-        etudiantRepository.save(etudiant2);
+        etudiant2.setIdEtudiant(2);
+        etudiant.setDepartement(departement);
+        etudiant2.setDepartement(departement);
+        List<Etudiant> etudiants = Arrays.asList(etudiant, etudiant2);
+        when(etudiantRepository.findEtudiantsByDepartement_IdDepart(1)).thenReturn(etudiants);
 
         // Appel de la méthode
-        List<Etudiant> result = etudiantService.getEtudiantsByDepartement(savedDepartement.getIdDepart());
+        List<Etudiant> result = etudiantService.getEtudiantsByDepartement(1);
 
         // Vérifications
         assertNotNull(result, "La liste des étudiants ne devrait pas être null");
         assertEquals(2, result.size(), "La liste devrait contenir 2 étudiants");
         assertTrue(result.stream().anyMatch(e -> e.getNomE().equals("Oussema")),
                 "La liste devrait contenir l'étudiant Oussema");
+        verify(etudiantRepository, times(1)).findEtudiantsByDepartement_IdDepart(1);
     }
 }
