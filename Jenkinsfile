@@ -21,7 +21,6 @@ pipeline {
         stage('SONARQUBE') {
             steps {
                 echo 'Analyse de code'
-                // Remplacez YOUR_SONAR_TOKEN par un token valide
                 sh 'mvn sonar:sonar -Dsonar.token=sqa_81266d80b7436da886b5d0c01efe6d912b3f1265'
             }
         }
