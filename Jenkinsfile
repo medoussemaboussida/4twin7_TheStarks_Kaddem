@@ -92,6 +92,19 @@ pipeline {
                 sh 'mvn install'
             }
         }
+        stage('Test Email') {
+            steps {
+                script {
+                    emailext(
+                        body: 'This is a test email from Jenkins.',
+                        subject: 'Test Email',
+                        to: 'ghassenbenmahmoud6@gmail.com',
+                        from: 'ghassenbenmahmoud6@gmail.com',
+                        mimeType: 'text/plain'
+                    )
+                }
+            }
+        }
         stage('Deploy to Nexus') {
             steps {
                 sh 'mvn deploy'
