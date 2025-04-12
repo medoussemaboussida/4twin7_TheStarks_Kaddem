@@ -27,7 +27,6 @@ class UniversiteServiceMockTests {
 
     @BeforeEach
     void setUp() {
-        // Plus besoin de MockitoAnnotations.initMocks(this)
     }
 
     @Test
