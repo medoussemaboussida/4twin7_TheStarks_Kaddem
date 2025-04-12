@@ -1,52 +1,53 @@
-//mailing functions
 def success() {
-    def imageUrl = 'https://semaphoreci.com/wp-content/uploads/2020/02/cic-cd-explained.jpg'
-    def imageWidth = '800px'
-    def imageHeight = 'auto'
-
-    echo "Sending success email..."
-    emailext(
-        body: """
-        <html>
-        <body>
-            <p>The Jenkins job was successful.</p>
-            <p>You can view the build at: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-            <p><img src="${imageUrl}" alt="Your Image" width="${imageWidth}" height="${imageHeight}"></p>
-        </body>
-        </html>
-        """,
-        subject: "Jenkins Build - Success",
-        to: 'ghassenbenmahmoud6@gmail.com',
-        from: 'ghassenbenmahmoud6@gmail.com',
-        replyTo: 'ghassenbenmahmoud6@gmail.com',
-        mimeType: 'text/html'
-    )
-    echo "Success email sent."
+    try {
+        echo "Sending success email..."
+        emailext(
+            body: """
+            <html>
+            <body>
+                <p>The Jenkins job was successful.</p>
+                <p>You can view the build at: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+                <p><img src="https://semaphoreci.com/wp-content/uploads/2020/02/cic-cd-explained.jpg" alt="Your Image" width="800px" height="auto"></p>
+            </body>
+            </html>
+            """,
+            subject: "Jenkins Build - Success",
+            to: 'ghassenbenmahmoud6@gmail.com',
+            from: 'ghassenbenmahmoud6@gmail.com',
+            replyTo: 'ghassenbenmahmoud6@gmail.com',
+            mimeType: 'text/html'
+        )
+        echo "Success email sent."
+    } catch (Exception e) {
+        echo "Failed to send success email: ${e.getMessage()}"
+        throw e
+    }
 }
 
 def failure() {
-    def imageUrl = 'https://miro.medium.com/v2/resize:fit:4800/format:webp/1*ytlj68SIRGvi9mecSDb52g.png'
-    def imageWidth = '800px'
-    def imageHeight = 'auto'
-
-    echo "Sending failure email..."
-    emailext(
-        body: """
-        <html>
-        <body>
-            <p>Oops! The Jenkins job Failed.</p>
-            <p>You can view the build at: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-            <p><img src="${imageUrl}" alt="Your Image" width="${imageWidth}" height="${imageHeight}"></p>
-        </body>
-        </html>
-        """,
-        subject: "Jenkins Build - Failure",
-        to: 'ghassenbenmahmoud6@gmail.com',
-        from: 'ghassenbenmahmoud6@gmail.com',
-        replyTo: 'ghassenbenmahmoud6@gmail.com',
-        mimeType: 'text/html'
-    )
-    echo "Failure email sent."
+    try {
+        echo "Sending failure email..."
+        emailext(
+            body: """
+            <html>
+            <body>
+                <p>Oops! The Jenkins job Failed.</p>
+                <p>You can view the build at: <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+                <p><img src="https://miro.medium.com/v2/resize:fit:4800/format:webp/1*ytlj68SIRGvi9mecSDb52g.png" alt="Your Image" width="800px" height="auto"></p>
+            </body>
+            </html>
+            """,
+            subject: "Jenkins Build - Failure",
+            to: 'ghassenbenmahmoud6@gmail.com',
+            from: 'ghassenbenmahmoud6@gmail.com',
+            replyTo: 'ghassenbenmahmoud6@gmail.com',
+            mimeType: 'text/html'
+        )
+        echo "Failure email sent."
+    } catch (Exception e) {
+        echo "Failed to send failure email: ${e.getMessage()}"
+        throw e
+    }
 }
 pipeline {
     agent any
