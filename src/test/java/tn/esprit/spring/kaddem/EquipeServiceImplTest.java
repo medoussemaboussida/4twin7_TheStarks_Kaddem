@@ -34,27 +34,43 @@ class EquipeServiceImplTest {
     private EquipeServiceImpl equipeService;
 
     private Equipe equipe;
-    private Etudiant etudiant;
+    private Etudiant etudiant1, etudiant2, etudiant3;
     private Contrat contrat;
 
     @BeforeEach
     void setUp() {
-        // Initialisation des objets
+        // Initialisation de l'équipe
         equipe = new Equipe();
-        equipe.setIdEquipe(1); // ID défini manuellement pour les mocks
+        equipe.setIdEquipe(1);
         equipe.setNomEquipe("Equipe A");
         equipe.setNiveau(Niveau.JUNIOR);
         equipe.setEtudiants(new HashSet<>());
 
-        etudiant = new Etudiant();
-        etudiant.setIdEtudiant(1); // ID défini manuellement pour les mocks
-        etudiant.setNomE("Oussema");
-        etudiant.setPrenomE("Med");
-        etudiant.setOp(Option.GAMIX);
-        etudiant.setContrats(new HashSet<>());
+        // Initialisation des étudiants
+        etudiant1 = new Etudiant();
+        etudiant1.setIdEtudiant(1);
+        etudiant1.setNomE("Oussema");
+        etudiant1.setPrenomE("Med");
+        etudiant1.setOp(Option.GAMIX);
+        etudiant1.setContrats(new HashSet<>());
 
+        etudiant2 = new Etudiant();
+        etudiant2.setIdEtudiant(2);
+        etudiant2.setNomE("Ahmed");
+        etudiant2.setPrenomE("Ben");
+        etudiant2.setOp(Option.GAMIX);
+        etudiant2.setContrats(new HashSet<>());
+
+        etudiant3 = new Etudiant();
+        etudiant3.setIdEtudiant(3);
+        etudiant3.setNomE("Sara");
+        etudiant3.setPrenomE("Ali");
+        etudiant3.setOp(Option.GAMIX);
+        etudiant3.setContrats(new HashSet<>());
+
+        // Initialisation du contrat
         contrat = new Contrat();
-        contrat.setIdContrat(1); // ID défini manuellement pour les mocks
+        contrat.setIdContrat(1);
         contrat.setDateDebutContrat(new Date(System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 365 * 2)); // -2 ans
         contrat.setDateFinContrat(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 30)); // +30 jours
         contrat.setSpecialite(Specialite.IA);
@@ -65,7 +81,10 @@ class EquipeServiceImplTest {
     @Test
     void testRetrieveAllEquipes() {
         // Données simulées
-        List<Equipe> equipes = Arrays.asList(equipe, new Equipe("Equipe B", Niveau.SENIOR));
+        List<Equipe> equipes = Arrays.asList(equipe, new Equipe());
+        equipes.get(1).setIdEquipe(2);
+        equipes.get(1).setNomEquipe("Equipe B");
+        equipes.get(1).setNiveau(Niveau.SENIOR);
         when(equipeRepository.findAll()).thenReturn(equipes);
 
         // Appel de la méthode
@@ -149,5 +168,52 @@ class EquipeServiceImplTest {
         verify(equipeRepository, times(1)).delete(equipe);
     }
 
+    @Test
+    void testEvoluerEquipesJuniorToSenior() {
+        // Configurer une équipe JUNIOR avec 3 étudiants ayant des contrats actifs
+        equipe.setNiveau(Niveau.JUNIOR);
+        equipe.getEtudiants().add(etudiant1);
+        equipe.getEtudiants().add(etudiant2);
+        equipe.getEtudiants().add(etudiant3);
 
+        // Configurer des contrats actifs (plus d’un an, non archivés)
+        etudiant1.getContrats().add(contrat);
+        etudiant2.getContrats().add(contrat);
+        etudiant3.getContrats().add(contrat);
+
+        // Simuler le repository
+        List<Equipe> equipes = Collections.singletonList(equipe);
+        when(equipeRepository.findAll()).thenReturn(equipes);
+        when(equipeRepository.save(any(Equipe.class))).thenReturn(equipe);
+
+        // Appel de la méthode
+        equipeService.evoluerEquipes();
+
+        // Vérifications
+        assertEquals(Niveau.SENIOR, equipe.getNiveau(), "L'équipe devrait passer à SENIOR");
+        verify(equipeRepository, times(1)).findAll();
+        verify(equipeRepository, times(1)).save(equipe);
+    }
+
+    @Test
+    void testEvoluerEquipesNoEvolution() {
+        // Configurer une équipe JUNIOR avec 1 étudiant ayant un contrat actif
+        equipe.setNiveau(Niveau.JUNIOR);
+        equipe.getEtudiants().add(etudiant1);
+
+        // Configurer un contrat actif pour un seul étudiant
+        etudiant1.getContrats().add(contrat);
+
+        // Simuler le repository
+        List<Equipe> equipes = Collections.singletonList(equipe);
+        when(equipeRepository.findAll()).thenReturn(equipes);
+
+        // Appel de la méthode
+        equipeService.evoluerEquipes();
+
+        // Vérifications
+        assertEquals(Niveau.JUNIOR, equipe.getNiveau(), "L'équipe devrait rester JUNIOR");
+        verify(equipeRepository, times(1)).findAll();
+        verify(equipeRepository, never()).save(any(Equipe.class));
+    }
 }
