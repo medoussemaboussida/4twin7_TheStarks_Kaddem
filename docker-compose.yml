@@ -1,36 +1,56 @@
+version: '3.8'
 
-    version: '3.8'
-
-    services:
-      mysql:
-        image: mysql:latest
-        container_name: mysql
-        restart: unless-stopped
-        environment:
-          - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-          - MYSQL_DATABASE=kaddem
-        ports:
-          - "3306:3306"
-        volumes:
-          - mysql-data:/var/lib/mysql
-
-      spring-boot-app:
-        image: asmariahi/kaddem:1.0.0
-        container_name: spring-boot-app
-        restart: on-failure
-        environment:
-          SPRING_APPLICATION_JSON: '{
-                "spring.datasource.url"  : "jdbc:mysql://mysql:3306/kaddem?createDatabaseIfNotExist=true",
-                "spring.datasource.username" : "root",
-                "spring.datasource.password" : null,
-                "spring.jpa.hibernate.ddl-auto" : "update"
-              }'
-        ports:
-          - "8082:8082"
-        depends_on:
-          - mysql
-        tty: true
-        stdin_open: true
-
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=kaddem
+    ports:
+      - "3306:3306"
     volumes:
-      mysql-data:
+      - mysql-data:/var/lib/mysql
+
+  spring-boot-app:
+    image: asmariahi/kaddem:1.0.0
+    container_name: spring-boot-app
+    restart: on-failure
+    environment:
+      SPRING_APPLICATION_JSON: '{
+            "spring.datasource.url"  : "jdbc:mysql://mysql:3306/kaddem?createDatabaseIfNotExist=true",
+            "spring.datasource.username" : "root",
+            "spring.datasource.password" : null,
+            "spring.jpa.hibernate.ddl-auto" : "update"
+          }'
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+    tty: true
+    stdin_open: true
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  mysql-data:
+  prometheus-data:
+  grafana-storage:
