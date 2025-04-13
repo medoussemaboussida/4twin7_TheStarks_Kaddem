@@ -29,7 +29,7 @@ class UniversiteServiceJUnitTests {
     private DepartementRepository departementRepository;
 
     @InjectMocks
-    private UniversiteServiceImpl universiteService; // Remplacez par votre implémentation réelle si différente
+    private UniversiteServiceImpl universiteService;
 
     private Universite universite;
     private Departement departement;
@@ -48,14 +48,11 @@ class UniversiteServiceJUnitTests {
 
     @Test
     void testRetrieveAllUniversites() {
-        // Arrange
         List<Universite> universites = Arrays.asList(universite);
         when(universiteRepository.findAll()).thenReturn(universites);
 
-        // Act
         List<Universite> result = universiteService.retrieveAllUniversites();
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Test Universite", result.get(0).getNomUniv());
@@ -64,13 +61,10 @@ class UniversiteServiceJUnitTests {
 
     @Test
     void testRetrieveUniversite() {
-        // Arrange
         when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
 
-        // Act
         Universite result = universiteService.retrieveUniversite(1);
 
-        // Assert
         assertNotNull(result);
         assertEquals("Test Universite", result.getNomUniv());
         verify(universiteRepository, times(1)).findById(1);
@@ -78,23 +72,18 @@ class UniversiteServiceJUnitTests {
 
     @Test
     void testRetrieveUniversiteNotFound() {
-        // Arrange
         when(universiteRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(NoSuchElementException.class, () -> universiteService.retrieveUniversite(999));
         verify(universiteRepository, times(1)).findById(999);
     }
 
     @Test
     void testAddUniversite() {
-        // Arrange
         when(universiteRepository.save(any(Universite.class))).thenReturn(universite);
 
-        // Act
         Universite result = universiteService.addUniversite(universite);
 
-        // Assert
         assertNotNull(result);
         assertEquals("Test Universite", result.getNomUniv());
         verify(universiteRepository, times(1)).save(universite);
@@ -102,28 +91,23 @@ class UniversiteServiceJUnitTests {
 
     @Test
     void testDeleteUniversite() {
-        // Arrange
         doNothing().when(universiteRepository).deleteById(anyInt());
 
-        // Act
         universiteService.deleteUniversite(1);
 
-        // Assert
         verify(universiteRepository, times(1)).deleteById(1);
     }
 
     @Test
     void testUpdateUniversite() {
-        // Arrange
         Universite updatedUniversite = new Universite();
         updatedUniversite.setIdUniv(1);
         updatedUniversite.setNomUniv("Updated Universite");
+
         when(universiteRepository.save(any(Universite.class))).thenReturn(updatedUniversite);
 
-        // Act
         Universite result = universiteService.updateUniversite(updatedUniversite);
 
-        // Assert
         assertNotNull(result);
         assertEquals("Updated Universite", result.getNomUniv());
         verify(universiteRepository, times(1)).save(updatedUniversite);
@@ -131,42 +115,45 @@ class UniversiteServiceJUnitTests {
 
     @Test
     void testAssignUniversiteToDepartement() {
-        // Arrange
         when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
         when(departementRepository.findById(1)).thenReturn(Optional.of(departement));
         when(universiteRepository.save(any(Universite.class))).thenReturn(universite);
 
-        // Act
         universiteService.assignUniversiteToDepartement(1, 1);
 
-        // Assert
         verify(universiteRepository, times(1)).findById(1);
         verify(departementRepository, times(1)).findById(1);
         verify(universiteRepository, times(1)).save(universite);
         assertTrue(universite.getDepartements().contains(departement));
+        assertEquals(1, universite.getDepartements().size());
     }
 
     @Test
     void testAssignUniversiteToDepartementUniversiteNotFound() {
-        // Arrange
         when(universiteRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(NoSuchElementException.class, () -> universiteService.assignUniversiteToDepartement(999, 1));
         verify(universiteRepository, times(1)).findById(999);
         verify(departementRepository, never()).findById(anyInt());
     }
 
     @Test
+    void testAssignUniversiteToDepartementDepartementNotFound() {
+        when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
+        when(departementRepository.findById(999)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> universiteService.assignUniversiteToDepartement(1, 999));
+        verify(universiteRepository, times(1)).findById(1);
+        verify(departementRepository, times(1)).findById(999);
+    }
+
+    @Test
     void testRetrieveDepartementsByUniversite() {
-        // Arrange
         universite.getDepartements().add(departement);
         when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
 
-        // Act
         Set<Departement> result = universiteService.retrieveDepartementsByUniversite(1);
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Informatique", result.iterator().next().getNomDepart());
@@ -175,10 +162,8 @@ class UniversiteServiceJUnitTests {
 
     @Test
     void testRetrieveDepartementsByUniversiteNotFound() {
-        // Arrange
         when(universiteRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(NoSuchElementException.class, () -> universiteService.retrieveDepartementsByUniversite(999));
         verify(universiteRepository, times(1)).findById(999);
     }

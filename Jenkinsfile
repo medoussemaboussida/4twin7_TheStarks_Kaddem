@@ -122,7 +122,7 @@ pipeline {
         }
         stage('Push Docker Image') {
             steps {
-                sh 'docker push  ghassenbenmahmoud/kaddem:1.0.0'
+                sh 'docker push ghassenbenmahmoud/kaddem:1.0.0'
             }
         }
         stage("Docker Compose") {
