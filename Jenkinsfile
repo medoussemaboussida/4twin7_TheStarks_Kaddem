@@ -71,12 +71,14 @@ pipeline {
         stage('Test Email') {
             steps {
                 script {
+                    echo "Sending test email..."
                     emailext(
                         body: 'This is a test email from Jenkins.',
                         subject: 'Test Email',
                         to: 'ghassenbenmahmoud6@gmail.com',
                         mimeType: 'text/plain'
                     )
+                    echo "Test email sent."
                 }
             }
         }
@@ -87,12 +89,14 @@ pipeline {
         }
         stage('JaCoCo coverage report') {
             steps {
+                echo "Running JaCoCo coverage report..."
                 jacoco(
                     execPattern: '**/target/jacoco.exec',
                     classPattern: '**/classes',
                     sourcePattern: '**/src',
                     exclusionPattern: '*/target/**/,**/*Test*,**/*_javassist/**'
                 )
+                echo "JaCoCo report generated successfully."
             }
         }
         stage("SonarQube Analysis") {
@@ -123,26 +127,45 @@ pipeline {
             }
         }
     }
-   post {
-           always {
-               script {
-                   emailext(
-                       body: "Build completed with status: ${currentBuild.result}. URL: ${BUILD_URL}",
-                       subject: "Jenkins Build - Status",
-                       to: 'ghassenbenmahmoud6@gmail.com',
-                       mimeType: 'text/plain'
-                   )
-               }
-           }
-           success {
-               script {
-                   success()
-               }
-           }
-           failure {
-               script {
-                   failure()
-               }
-           }
-       }
-   }
+    post {
+        always {
+            script {
+                echo "Build status: ${currentBuild.result}"
+                echo "Attempting to send status email..."
+                try {
+                    emailext(
+                        body: "Build completed with status: ${currentBuild.result}. URL: ${BUILD_URL}",
+                        subject: "Jenkins Build - Status",
+                        to: 'ghassenbenmahmoud6@gmail.com',
+                        mimeType: 'text/plain'
+                    )
+                    echo "Status email sent successfully."
+                } catch (Exception e) {
+                    echo "Failed to send status email: ${e.getMessage()}"
+                    throw e
+                }
+            }
+        }
+        success {
+            script {
+                success()
+            }
+        }
+        failure {
+            script {
+                failure()
+            }
+        }
+        unstable {
+            script {
+                echo "Build is unstable."
+                emailext(
+                    body: "Build is unstable. URL: ${BUILD_URL}",
+                    subject: "Jenkins Build - Unstable",
+                    to: 'ghassenbenmahmoud6@gmail.com',
+                    mimeType: 'text/plain'
+                )
+            }
+        }
+    }
+}
