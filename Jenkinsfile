@@ -124,25 +124,25 @@ pipeline {
         }
     }
     post {
-        always {
-            script {
-                emailext(
-                    body: "Build completed with status: ${currentBuild.result}. URL: ${BUILD_URL}",
-                    subject: "Jenkins Build - Status",
-                    to: 'ghassenbenmahmoud6@gmail.com',
-                    mimeType: 'text/plain'
-                )
+            always {
+                script {
+                    emailext(
+                        body: "Build completed with status: ${currentBuild.result}. URL: ${BUILD_URL}",
+                        subject: "Jenkins Build - Status",
+                        to: 'ghassenbenmahmoud6@gmail.com',
+                        mimeType: 'text/plain'
+                    )
+                }
             }
-        }
-        success {
-            script {
-                success()
+            success {
+                script {
+                    success()
+                }
             }
-        }
-        failure {
-            script {
-                failure()
+            failure {
+                script {
+                    failure()
+                }
             }
         }
     }
-}
