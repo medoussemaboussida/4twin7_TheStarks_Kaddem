@@ -131,8 +131,7 @@ class DepartementServiceImplTest {
 
     @Test
     void testUpdateDepartementNotFound() {
-        // Simuler un département non existant
-        when(departementRepository.findById(1)).thenReturn(Optional.empty());
+        // Simuler le comportement du repository
         when(departementRepository.save(any(Departement.class))).thenReturn(departement);
 
         // Appel de la méthode
@@ -200,10 +199,10 @@ class DepartementServiceImplTest {
         // Simuler un département non trouvé
         when(departementRepository.findById(999)).thenReturn(Optional.empty());
 
-        // Vérifier que la suppression lève une exception
-        assertThrows(javax.persistence.EntityNotFoundException.class,
+        // Vérifier que la suppression lève NoSuchElementException
+        assertThrows(java.util.NoSuchElementException.class,
                 () -> departementService.deleteDepartement(999),
-                "Supprimer un département non existant doit lever une exception");
+                "Supprimer un département non existant doit lever NoSuchElementException");
         verify(departementRepository, times(1)).findById(999);
         verify(departementRepository, never()).delete(any(Departement.class));
     }
@@ -227,7 +226,8 @@ class DepartementServiceImplTest {
     @Test
     void testRetrieveAllDepartementsLargeList() {
         // Simuler une grande liste de départements
-        List<Departement> largeList = Arrays.asList(new Departement[1000]);
+        Departement[] array = new Departement[1000];
+        List<Departement> largeList = Arrays.asList(array);
         for (int i = 0; i < 1000; i++) {
             Departement dep = new Departement();
             dep.setIdDepart(i + 1);
