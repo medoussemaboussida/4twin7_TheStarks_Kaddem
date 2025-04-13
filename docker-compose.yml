@@ -1,36 +1,36 @@
 
-    version: '3.8'
+version: '3.8'
 
-    services:
-      mysql:
-        image: mysql:latest
-        container_name: mysql
-        restart: unless-stopped
-        environment:
-          - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-          - MYSQL_DATABASE=kaddem
-        ports:
-          - "3306:3306"
-        volumes:
-          - mysql-data:/var/lib/mysql
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=kaddem
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
 
-      spring-boot-app:
-        image: asmariahi/kaddem:1.0.0
-        container_name: spring-boot-app
-        restart: on-failure
-        environment:
-          SPRING_APPLICATION_JSON: '{
+  spring-boot-app:
+    image: asmariahi/kaddem:1.0.0
+    container_name: spring-boot-app
+    restart: on-failure
+    environment:
+      SPRING_APPLICATION_JSON: '{
                 "spring.datasource.url"  : "jdbc:mysql://mysql:3306/kaddem?createDatabaseIfNotExist=true",
                 "spring.datasource.username" : "root",
                 "spring.datasource.password" : null,
                 "spring.jpa.hibernate.ddl-auto" : "update"
               }'
-        ports:
-          - "8082:8082"
-        depends_on:
-          - mysql
-        tty: true
-        stdin_open: true
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+    tty: true
+    stdin_open: true
 
-    volumes:
-      mysql-data:
+volumes:
+  mysql-data:
