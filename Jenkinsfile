@@ -72,13 +72,18 @@ pipeline {
             steps {
                 script {
                     echo "Sending test email..."
-                    emailext(
-                        body: 'This is a test email from Jenkins.',
-                        subject: 'Test Email',
-                        to: 'ghassenbenmahmoud6@gmail.com',
-                        mimeType: 'text/plain'
-                    )
-                    echo "Test email sent."
+                    try {
+                        emailext(
+                            body: 'This is a test email from Jenkins.',
+                            subject: 'Test Email',
+                            to: 'ghassenbenmahmoud6@gmail.com',
+                            mimeType: 'text/plain'
+                        )
+                        echo "Test email sent successfully."
+                    } catch (Exception e) {
+                        echo "Failed to send test email: ${e.getMessage()}"
+                        throw e
+                    }
                 }
             }
         }
@@ -159,12 +164,18 @@ pipeline {
         unstable {
             script {
                 echo "Build is unstable."
-                emailext(
-                    body: "Build is unstable. URL: ${BUILD_URL}",
-                    subject: "Jenkins Build - Unstable",
-                    to: 'ghassenbenmahmoud6@gmail.com',
-                    mimeType: 'text/plain'
-                )
+                try {
+                    emailext(
+                        body: "Build is unstable. URL: ${BUILD_URL}",
+                        subject: "Jenkins Build - Unstable",
+                        to: 'ghassenbenmahmoud6@gmail.com',
+                        mimeType: 'text/plain'
+                    )
+                    echo "Unstable email sent successfully."
+                } catch (Exception e) {
+                    echo "Failed to send unstable email: ${e.getMessage()}"
+                    throw e
+                }
             }
         }
     }
