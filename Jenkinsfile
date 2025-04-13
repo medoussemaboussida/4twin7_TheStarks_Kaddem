@@ -63,5 +63,24 @@ pipeline {
                         sh 'docker compose up -d'
                     }
                 }
-    }
+   stage('SEND EMAIL') {
+               steps {
+                   echo 'Sending email notification...'
+                   emailext (
+                       subject: "PIPELINE STATUS: ${currentBuild.result}",
+                       body: """<html>
+                           <body>
+                               <p>BUILD STATUS: ${currentBuild.result}</p>
+                               <p>BUILD NUMBER: ${currentBuild.number}</p>
+                               <p>Check the <a href="${env.BUILD_URL}">console output</a>.</p>
+                           </body>
+                       </html>""",
+                       to: 'rou.zdiri@gmail.com',
+                       from: 'jenkins@example.com',
+                       replyTo: 'jenkins@example.com',
+                       mimeType: 'text/html'
+                   )
+               }
+           }
+       }
 }
