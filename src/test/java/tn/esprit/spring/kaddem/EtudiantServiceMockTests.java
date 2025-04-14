@@ -106,14 +106,11 @@ class EtudiantServiceMockTests {
         invalidEtudiant.setIdEtudiant(2);
         invalidEtudiant.setNomE(null);
         invalidEtudiant.setPrenomE("Jane");
-        invalidEtudiant.setEquipes(new ArrayList<>());
-        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(invalidEtudiant);
 
-        Etudiant result = etudiantService.addEtudiant(invalidEtudiant);
-
-        assertNotNull(result);
-        assertNull(result.getNomE());
-        verify(etudiantRepository, times(1)).save(invalidEtudiant);
+        assertThrows(IllegalArgumentException.class,
+                () -> etudiantService.addEtudiant(invalidEtudiant),
+                "Ajouter un étudiant avec un nom null doit lever une exception");
+        verify(etudiantRepository, never()).save(any(Etudiant.class));
     }
 
     @Test
@@ -122,14 +119,11 @@ class EtudiantServiceMockTests {
         invalidEtudiant.setIdEtudiant(3);
         invalidEtudiant.setNomE("");
         invalidEtudiant.setPrenomE("Jane");
-        invalidEtudiant.setEquipes(new ArrayList<>());
-        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(invalidEtudiant);
 
-        Etudiant result = etudiantService.addEtudiant(invalidEtudiant);
-
-        assertNotNull(result);
-        assertEquals("", result.getNomE());
-        verify(etudiantRepository, times(1)).save(invalidEtudiant);
+        assertThrows(IllegalArgumentException.class,
+                () -> etudiantService.addEtudiant(invalidEtudiant),
+                "Ajouter un étudiant avec un nom vide doit lever une exception");
+        verify(etudiantRepository, never()).save(any(Etudiant.class));
     }
 
     @Test
@@ -147,40 +141,42 @@ class EtudiantServiceMockTests {
     void testRetrieveEtudiantNotFound() {
         when(etudiantRepository.findById(999)).thenReturn(Optional.empty());
 
-        assertThrows(java.util.NoSuchElementException.class,
+        assertThrows(javax.persistence.EntityNotFoundException.class,
                 () -> etudiantService.retrieveEtudiant(999),
-                "Récupérer un étudiant inexistant doit lever NoSuchElementException");
+                "Récupérer un étudiant inexistant doit lever EntityNotFoundException");
         verify(etudiantRepository, times(1)).findById(999);
     }
 
     @Test
     void testRetrieveEtudiantInvalidId() {
-        assertThrows(java.util.NoSuchElementException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> etudiantService.retrieveEtudiant(-1),
-                "Récupérer un étudiant avec un ID négatif doit lever NoSuchElementException");
-        verify(etudiantRepository, times(1)).findById(-1);
+                "Récupérer un étudiant avec un ID négatif doit lever une exception");
+        verify(etudiantRepository, never()).findById(-1);
     }
 
     @Test
     void testUpdateEtudiant() {
+        when(etudiantRepository.findById(1)).thenReturn(Optional.of(etudiant));
         when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
 
         Etudiant result = etudiantService.updateEtudiant(etudiant);
 
         assertNotNull(result);
         assertEquals("Doe", result.getNomE());
+        verify(etudiantRepository, times(1)).findById(1);
         verify(etudiantRepository, times(1)).save(etudiant);
     }
 
     @Test
     void testUpdateEtudiantNotFound() {
-        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(etudiant);
+        when(etudiantRepository.findById(1)).thenReturn(Optional.empty());
 
-        Etudiant result = etudiantService.updateEtudiant(etudiant);
-
-        assertNotNull(result);
-        assertEquals("Doe", result.getNomE());
-        verify(etudiantRepository, times(1)).save(etudiant);
+        assertThrows(javax.persistence.EntityNotFoundException.class,
+                () -> etudiantService.updateEtudiant(etudiant),
+                "Mettre à jour un étudiant inexistant doit lever une exception");
+        verify(etudiantRepository, times(1)).findById(1);
+        verify(etudiantRepository, never()).save(any(Etudiant.class));
     }
 
     @Test
@@ -198,9 +194,9 @@ class EtudiantServiceMockTests {
     void testRemoveEtudiantNotFound() {
         when(etudiantRepository.findById(999)).thenReturn(Optional.empty());
 
-        assertThrows(java.util.NoSuchElementException.class,
+        assertThrows(javax.persistence.EntityNotFoundException.class,
                 () -> etudiantService.removeEtudiant(999),
-                "Supprimer un étudiant inexistant doit lever NoSuchElementException");
+                "Supprimer un étudiant inexistant doit lever une exception");
         verify(etudiantRepository, times(1)).findById(999);
         verify(etudiantRepository, never()).delete(any(Etudiant.class));
     }
@@ -222,8 +218,9 @@ class EtudiantServiceMockTests {
     void testAssignEtudiantToDepartementEtudiantNotFound() {
         when(etudiantRepository.findById(999)).thenReturn(Optional.empty());
 
-        etudiantService.assignEtudiantToDepartement(999, 1);
-
+        assertThrows(javax.persistence.EntityNotFoundException.class,
+                () -> etudiantService.assignEtudiantToDepartement(999, 1),
+                "Assigner un étudiant inexistant doit lever une exception");
         verify(etudiantRepository, times(1)).findById(999);
         verify(departementRepository, never()).findById(anyInt());
         verify(etudiantRepository, never()).save(any(Etudiant.class));
@@ -234,8 +231,9 @@ class EtudiantServiceMockTests {
         when(etudiantRepository.findById(1)).thenReturn(Optional.of(etudiant));
         when(departementRepository.findById(999)).thenReturn(Optional.empty());
 
-        etudiantService.assignEtudiantToDepartement(1, 999);
-
+        assertThrows(javax.persistence.EntityNotFoundException.class,
+                () -> etudiantService.assignEtudiantToDepartement(1, 999),
+                "Assigner un étudiant à un département inexistant doit lever une exception");
         verify(etudiantRepository, times(1)).findById(1);
         verify(departementRepository, times(1)).findById(999);
         verify(etudiantRepository, never()).save(any(Etudiant.class));
@@ -256,14 +254,17 @@ class EtudiantServiceMockTests {
         verify(contratRepository, times(1)).findById(1);
         verify(equipeRepository, times(1)).findById(1);
         verify(etudiantRepository, times(1)).save(any(Etudiant.class));
+        verify(contratRepository, times(1)).save(any(Contrat.class));
+        verify(equipeRepository, times(1)).save(any(Equipe.class));
     }
 
     @Test
     void testAddAndAssignEtudiantToEquipeAndContractContratNotFound() {
         when(contratRepository.findById(999)).thenReturn(Optional.empty());
 
-        etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant, 999, 1);
-
+        assertThrows(javax.persistence.EntityNotFoundException.class,
+                () -> etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant, 999, 1),
+                "Ajouter un étudiant avec un contrat inexistant doit lever une exception");
         verify(contratRepository, times(1)).findById(999);
         verify(equipeRepository, never()).findById(anyInt());
         verify(etudiantRepository, never()).save(any(Etudiant.class));
@@ -274,8 +275,9 @@ class EtudiantServiceMockTests {
         when(contratRepository.findById(1)).thenReturn(Optional.of(contrat));
         when(equipeRepository.findById(999)).thenReturn(Optional.empty());
 
-        etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant, 1, 999);
-
+        assertThrows(javax.persistence.EntityNotFoundException.class,
+                () -> etudiantService.addAndAssignEtudiantToEquipeAndContract(etudiant, 1, 999),
+                "Ajouter un étudiant avec une équipe inexistante doit lever une exception");
         verify(contratRepository, times(1)).findById(1);
         verify(equipeRepository, times(1)).findById(999);
         verify(etudiantRepository, never()).save(any(Etudiant.class));
@@ -287,20 +289,13 @@ class EtudiantServiceMockTests {
         invalidEtudiant.setIdEtudiant(2);
         invalidEtudiant.setNomE(null);
         invalidEtudiant.setPrenomE("Jane");
-        invalidEtudiant.setEquipes(new ArrayList<>());
-        when(contratRepository.findById(1)).thenReturn(Optional.of(contrat));
-        when(equipeRepository.findById(1)).thenReturn(Optional.of(equipe));
-        when(etudiantRepository.save(any(Etudiant.class))).thenReturn(invalidEtudiant);
-        when(contratRepository.save(any(Contrat.class))).thenReturn(contrat);
-        when(equipeRepository.save(any(Equipe.class))).thenReturn(equipe);
 
-        Etudiant result = etudiantService.addAndAssignEtudiantToEquipeAndContract(invalidEtudiant, 1, 1);
-
-        assertNotNull(result);
-        assertNull(result.getNomE());
-        verify(contratRepository, times(1)).findById(1);
-        verify(equipeRepository, times(1)).findById(1);
-        verify(etudiantRepository, times(1)).save(any(Etudiant.class));
+        assertThrows(IllegalArgumentException.class,
+                () -> etudiantService.addAndAssignEtudiantToEquipeAndContract(invalidEtudiant, 1, 1),
+                "Ajouter un étudiant avec un nom null doit lever une exception");
+        verify(contratRepository, never()).findById(anyInt());
+        verify(equipeRepository, never()).findById(anyInt());
+        verify(etudiantRepository, never()).save(any(Etudiant.class));
     }
 
     @Test
@@ -312,7 +307,8 @@ class EtudiantServiceMockTests {
         List<Etudiant> result = etudiantService.getEtudiantsByDepartement(1);
 
         assertNotNull(result);
-        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+        assertEquals("Doe", result.get(0).getNomE());
         verify(departementRepository, times(1)).findById(1);
         verify(etudiantRepository, times(1)).findEtudiantsByDepartement_IdDepart(1);
     }
@@ -321,10 +317,9 @@ class EtudiantServiceMockTests {
     void testGetEtudiantsByDepartementNotFound() {
         when(departementRepository.findById(999)).thenReturn(Optional.empty());
 
-        List<Etudiant> result = etudiantService.getEtudiantsByDepartement(999);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertThrows(javax.persistence.EntityNotFoundException.class,
+                () -> etudiantService.getEtudiantsByDepartement(999),
+                "Récupérer les étudiants d'un département inexistant doit lever une exception");
         verify(departementRepository, times(1)).findById(999);
         verify(etudiantRepository, never()).findEtudiantsByDepartement_IdDepart(anyInt());
     }
