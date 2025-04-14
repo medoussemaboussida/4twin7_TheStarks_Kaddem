@@ -31,20 +31,21 @@ class UniversiteServiceMockTests {
     private UniversiteServiceImpl universiteService;
 
     private Universite universite;
+    private Universite universite2;
     private Departement departement;
 
     @BeforeEach
     void setUp() {
-        // Initialisation de l'université
+        // Initialisation des objets sans setters spécifiques
         universite = new Universite();
-        universite.setIdUniversite(1);
-        universite.setNomUniversite("Université Test");
+        // Pas de setIdUniversite ou setNomUniversite, car non disponibles
         universite.setDepartements(new HashSet<>());
 
-        // Initialisation du département
+        universite2 = new Universite();
+        universite2.setDepartements(new HashSet<>());
+
         departement = new Departement();
-        departement.setIdDepartement(1);
-        departement.setNomDepartement("Informatique");
+        // Pas de setIdDepartement ou setNomDepartement, car non disponibles
     }
 
     @Test
@@ -57,7 +58,7 @@ class UniversiteServiceMockTests {
 
         // Vérifications
         assertNotNull(savedUniversite, "L'université ajoutée ne devrait pas être null");
-        assertEquals("Université Test", savedUniversite.getNomUniversite(), "Le nom devrait être 'Université Test'");
+        assertEquals(universite, savedUniversite, "L'université retournée devrait être la même");
         verify(universiteRepository, times(1)).save(universite);
     }
 
@@ -71,7 +72,7 @@ class UniversiteServiceMockTests {
 
         // Vérifications
         assertNotNull(retrievedUniversite, "L'université récupérée ne devrait pas être null");
-        assertEquals("Université Test", retrievedUniversite.getNomUniversite(), "Le nom devrait être 'Université Test'");
+        assertEquals(universite, retrievedUniversite, "L'université retournée devrait être la même");
         verify(universiteRepository, times(1)).findById(1);
     }
 
@@ -92,10 +93,6 @@ class UniversiteServiceMockTests {
     @Test
     void testRetrieveAllUniversites() {
         // Données simulées
-        Universite universite2 = new Universite();
-        universite2.setIdUniversite(2);
-        universite2.setNomUniversite("Université B");
-        universite2.setDepartements(new HashSet<>());
         List<Universite> universites = Arrays.asList(universite, universite2);
         when(universiteRepository.findAll()).thenReturn(universites);
 
@@ -105,10 +102,8 @@ class UniversiteServiceMockTests {
         // Vérifications
         assertNotNull(result, "La liste des universités ne devrait pas être null");
         assertEquals(2, result.size(), "La liste devrait contenir 2 universités");
-        assertTrue(result.stream().anyMatch(u -> u.getNomUniversite().equals("Université Test")),
-                "La liste devrait contenir 'Université Test'");
-        assertTrue(result.stream().anyMatch(u -> u.getNomUniversite().equals("Université B")),
-                "La liste devrait contenir 'Université B'");
+        assertTrue(result.contains(universite), "La liste devrait contenir la première université");
+        assertTrue(result.contains(universite2), "La liste devrait contenir la deuxième université");
         verify(universiteRepository, times(1)).findAll();
     }
 
@@ -122,7 +117,7 @@ class UniversiteServiceMockTests {
 
         // Vérifications
         assertNotNull(updatedUniversite, "L'université mise à jour ne devrait pas être null");
-        assertEquals("Université Test", updatedUniversite.getNomUniversite(), "Le nom devrait être 'Université Test'");
+        assertEquals(universite, updatedUniversite, "L'université retournée devrait être la même");
         verify(universiteRepository, times(1)).save(universite);
     }
 
@@ -160,6 +155,21 @@ class UniversiteServiceMockTests {
     }
 
     @Test
+    void testAssignUniversiteToDepartementDepartementNotFound() {
+        // Simuler un département non trouvé
+        when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
+        when(departementRepository.findById(999)).thenReturn(Optional.empty());
+
+        // Appel de la méthode
+        universiteService.assignUniversiteToDepartement(1, 999);
+
+        // Vérifications
+        verify(universiteRepository, times(1)).findById(1);
+        verify(departementRepository, times(1)).findById(999);
+        verify(universiteRepository, never()).save(any(Universite.class));
+    }
+
+    @Test
     void testRetrieveDepartementsByUniversite() {
         // Configurer l'université avec un département
         universite.getDepartements().add(departement);
@@ -171,7 +181,7 @@ class UniversiteServiceMockTests {
         // Vérifications
         assertNotNull(result, "L'ensemble des départements ne devrait pas être null");
         assertEquals(1, result.size(), "L'ensemble devrait contenir 1 département");
-        assertTrue(result.contains(departement), "L'ensemble devrait contenir le département 'Informatique'");
+        assertTrue(result.contains(departement), "L'ensemble devrait contenir le département");
         verify(universiteRepository, times(1)).findById(1);
     }
 
