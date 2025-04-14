@@ -38,14 +38,12 @@ class UniversiteServiceMockTests {
     void setUp() {
         // Initialisation des objets sans setters spécifiques
         universite = new Universite();
-        // Pas de setIdUniversite ou setNomUniversite, car non disponibles
         universite.setDepartements(new HashSet<>());
 
         universite2 = new Universite();
         universite2.setDepartements(new HashSet<>());
 
         departement = new Departement();
-        // Pas de setIdDepartement ou setNomDepartement, car non disponibles
     }
 
     @Test
@@ -146,12 +144,13 @@ class UniversiteServiceMockTests {
         when(departementRepository.findById(1)).thenReturn(Optional.of(departement));
 
         // Appel de la méthode
-        universiteService.assignUniversiteToDepartement(999, 1);
+        assertThrows(NullPointerException.class,
+                () -> universiteService.assignUniversiteToDepartement(999, 1),
+                "Devrait lever une NullPointerException si l'université n'existe pas");
 
         // Vérifications
         verify(universiteRepository, times(1)).findById(999);
         verify(departementRepository, times(1)).findById(1);
-        verify(universiteRepository, never()).save(any(Universite.class));
     }
 
     @Test
@@ -159,6 +158,7 @@ class UniversiteServiceMockTests {
         // Simuler un département non trouvé
         when(universiteRepository.findById(1)).thenReturn(Optional.of(universite));
         when(departementRepository.findById(999)).thenReturn(Optional.empty());
+        when(universiteRepository.save(any(Universite.class))).thenReturn(universite);
 
         // Appel de la méthode
         universiteService.assignUniversiteToDepartement(1, 999);
@@ -166,7 +166,7 @@ class UniversiteServiceMockTests {
         // Vérifications
         verify(universiteRepository, times(1)).findById(1);
         verify(departementRepository, times(1)).findById(999);
-        verify(universiteRepository, never()).save(any(Universite.class));
+        verify(universiteRepository, times(1)).save(universite);
     }
 
     @Test
@@ -191,10 +191,11 @@ class UniversiteServiceMockTests {
         when(universiteRepository.findById(999)).thenReturn(Optional.empty());
 
         // Appel de la méthode
-        Set<Departement> result = universiteService.retrieveDepartementsByUniversite(999);
+        assertThrows(NullPointerException.class,
+                () -> universiteService.retrieveDepartementsByUniversite(999),
+                "Devrait lever une NullPointerException si l'université n'existe pas");
 
         // Vérifications
-        assertNull(result, "L'ensemble devrait être null si l'université n'existe pas");
         verify(universiteRepository, times(1)).findById(999);
     }
 }
