@@ -1,7 +1,7 @@
 # Kaddem project Spring Boot
 
 ✔ Continuous Integration and Automation with Jenkins .  
-✔ Testing with JUnit and Mockito . 
+✔ Testing with JUnit and Mockito .  
 ✔ Jacoco Coverage report .  
 ✔ Code Quality Control with SonarQube .  
 ✔ Artifact Hosting with Nexus3 .  
