@@ -23,8 +23,6 @@
   <img width="12" />
   <img src="https://cdn.simpleicons.org/grafana/F46800" height="40" alt="grafana logo" />
   <img width="12" />
-  <img src="https://cdn.simpleicons.org/sonarqube/4E9BCD" height="40" alt="SonarQube logo" />
-  <img width="12" />
   <img src="https://worldvectorlogo.com/logos/sonatype-logo.svg" height="40" alt="Logo de Sonatype Nexus Repository" />
   <img width="12" />
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" height="40" alt="git logo"  />
