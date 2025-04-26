@@ -127,26 +127,9 @@ pipeline {
                 sh 'echo $DOCKER_CREDENTIALS_ID_PSW | docker login -u $DOCKER_CREDENTIALS_ID_USR --password-stdin'
             }
         }
-        stage('Push Docker Image') {
+    stage('Push Docker Image') {
             steps {
-                script {
-                    def image = 'mohamedoussemaboussida/kaddem:1.0.0'
-                    def localDigest = sh(script: "docker inspect --format='{{index .RepoDigests 0}}' ${image} | cut -d'@' -f2", returnStdout: true).trim()
-                    def remoteDigest = sh(
-                        script: """
-                            curl -s -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' \\
-                            -u $DOCKER_CREDENTIALS_ID_USR:$DOCKER_CREDENTIALS_ID_PSW \\
-                            https://index.docker.io/v2/mohamedoussemaboussida/kaddem/manifests/1.0.0 | jq -r .config.digest
-                        """, 
-                        returnStdout: true
-                    ).trim()
-
-                    if (localDigest == remoteDigest) {
-                        echo "Docker image already exists and is up-to-date. Skipping push."
-                    } else {
-                        sh 'docker push mohamedoussemaboussida/kaddem:1.0.0'
-                    }
-                }
+                sh 'docker push  mohamedoussemaboussida/kaddem:1.0.0'
             }
         }
         stage("Docker Compose") {
